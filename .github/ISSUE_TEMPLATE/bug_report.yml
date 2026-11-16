@@ -1,0 +1,95 @@
+name: Bug report
+description: Report a reproducible defect in Cleanhatch L0 or L1.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This form is for reproducible defects. You do **not** need to buy L1,
+        own a license key, accept the L1 commercial terms, sign a CLA, or add a
+        DCO sign-off to report a bug. The form asks only that you remove
+        sensitive data and allow the report to be discussed publicly.
+
+        Please submit desensitized reproduction steps and synthetic data. Never
+        paste proprietary data, credentials, client names, or personal
+        filesystem paths. For security-sensitive reports, use the
+        [private security advisory](https://github.com/cleanhatch/cleanhatch/security/advisories/new)
+        instead of this public form.
+
+        The contribution and licensing rules are in
+        [CONTRIBUTING.md](https://github.com/cleanhatch/cleanhatch/blob/main/CONTRIBUTING.md).
+
+  - type: input
+    id: bug-summary
+    attributes:
+      label: Bug summary
+      description: One sentence describing the defect.
+      placeholder: "TemporalGate.read_as_of returns the wrong revision when..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Cleanhatch version, Python version, operating system, install method, and whether the issue is in L0 or L1.
+      placeholder: |
+        cleanhatch: 0.x.y
+        python: 3.12
+        os: Windows 11 / Ubuntu 24.04
+        install: pip install cleanhatch
+        area: L0 / L1 pack name
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: The smallest steps or synthetic table that reproduces the defect.
+      placeholder: |
+        1. Build a small frame with...
+        2. Call...
+        3. Observe...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-actual
+    attributes:
+      label: Expected and actual result
+      description: What should happen, what happened instead, and why it matters.
+      placeholder: |
+        Expected: FAILED with the offending rows identified.
+        Actual: PASSED with a corrupted value.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized traceback or verdict
+      description: Optional. Remove local paths, tokens, client names, and non-synthetic data values.
+      render: text
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: data-hygiene
+    attributes:
+      label: Privacy & data hygiene
+      options:
+        - label: I removed proprietary data, credentials, client names, and personal filesystem paths from this report.
+          required: true
+        - label: I understand this report may be published and discussed publicly with the content I provided.
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        A bug report is not a contribution for relicensing, and no broad
+        copyright or patent license is requested. If you include a patch or code
+        snippet, that code is contributed under
+        [Apache-2.0](https://github.com/cleanhatch/cleanhatch/blob/main/LICENSE)
+        unless you mark it "Not a Contribution" in writing; the report text
+        itself is not.

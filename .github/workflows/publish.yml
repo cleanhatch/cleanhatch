@@ -11,51 +11,134 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    name: l0 test (${{ matrix.os }} / py${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
-      - name: Test source
-        env:
-          PYTHONPATH: src
-        run: python -m unittest discover -s tests -v
+          cache: pip
+      - name: Install L0 package and dev tools
+        run: python -m pip install -e ".[dev]"
+      - name: Lint
+        run: python -m ruff check .
+      - name: Format check
+        run: python -m ruff format --check .
+      - name: Type check
+        run: |
+          python -c "import subprocess, sys; raise SystemExit(subprocess.call([sys.executable, '-m', 'pyright', '--pythonpath', sys.executable]))"
+      - name: Run L0 test suite
+        run: python -m pytest tests -q
+      - name: Run showcase demo
+        run: cleanhatch demo
 
   build:
+    name: build L0 sdist and wheel
     needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.14"
+          python-version: "3.12"
       - name: Install build tools
         run: python -m pip install build twine
       - name: Build distributions and check metadata
         run: |
           python -m build
           python -m twine check --strict dist/*
+      - name: Verify package boundary
+        run: python scripts/check_dist.py l0 dist
+      - name: Verify artifacts contain no private paths
+        run: |
+          python - <<'PY'
+          import pathlib
+          import tarfile
+          import zipfile
+
+          forbidden_text = (
+              "Ja" + "lan",
+              "7is" + "rain",
+              "qi." + "jialiang",
+              "PIT_" + "Gate",
+              "OneDrive\\Codebase",
+              "C:\\Users",
+              "/home/runner",
+              "/Users/runner",
+          )
+          artifacts = sorted(pathlib.Path("dist").iterdir())
+          assert artifacts, "dist/ is empty"
+          members: list[str] = []
+          for artifact in artifacts:
+              if artifact.suffix == ".whl":
+                  with zipfile.ZipFile(artifact) as archive:
+                      names = archive.namelist()
+                      blobs = [
+                          archive.read(name)
+                          for name in names
+                          if not name.endswith("/")
+                      ]
+              elif artifact.suffix in {".gz", ".tar"}:
+                  with tarfile.open(artifact) as archive:
+                      entries = archive.getmembers()
+                      names = archive.getnames()
+                      blobs = [
+                          archive.extractfile(entry).read()
+                          for entry in entries
+                          if entry.isfile()
+                      ]
+              else:
+                  raise SystemExit(f"unexpected artifact: {artifact}")
+              for name in names:
+                  assert not name.startswith(("/", "\\")), f"absolute archive path: {name}"
+                  assert not (len(name) > 1 and name[1] == ":"), f"drive path: {name}"
+              members.extend(names)
+              for blob in blobs:
+                  text = blob.decode("utf-8", errors="ignore")
+                  for marker in forbidden_text:
+                      assert marker not in text, (
+                          f"{artifact.name} leaks local path marker {marker!r}"
+                      )
+
+          joined = "\n".join(members)
+          assert "cleanhatch/demo.py" in joined, "demo module missing from artifacts"
+          assert "cleanhatch/analysis.py" in joined, "shared analysis module missing"
+          assert "README.md" in joined, "README.md missing from artifacts"
+          assert "MIGRATION.md" in joined, "MIGRATION.md missing from artifacts"
+          print(f"verified {len(artifacts)} artifact(s), {len(members)} member(s)")
+          PY
       - name: Test installed wheel outside the checkout
         working-directory: ${{ runner.temp }}
         run: |
-          python -m pip install "${{ github.workspace }}"/dist/*.whl
-          python -m unittest discover -s "${{ github.workspace }}/tests" -v
-          cleanhatch --version
-          python -c "from importlib.metadata import version; import cleanhatch; assert version('cleanhatch') == cleanhatch.__version__ == '0.0.1a0'"
-      - name: Test source distribution outside the checkout
-        working-directory: ${{ runner.temp }}
+          python -m venv "$RUNNER_TEMP/l0-venv"
+          "$RUNNER_TEMP/l0-venv/bin/python" -m pip install "${{ github.workspace }}"/dist/*.whl
+          "$RUNNER_TEMP/l0-venv/bin/cleanhatch" doctor
+          "$RUNNER_TEMP/l0-venv/bin/cleanhatch" demo
+          "$RUNNER_TEMP/l0-venv/bin/python" - <<'PY'
+          import importlib.util
+          assert importlib.util.find_spec("cleanhatch.report") is None
+          assert importlib.util.find_spec("cleanhatch.license") is None
+          assert importlib.util.find_spec("cleanhatch_l1") is None
+          PY
+      - name: Run the packaged L0 sdist test suite
         run: |
-          python -m pip install --force-reinstall "${{ github.workspace }}"/dist/*.tar.gz
-          python -m unittest discover -s "${{ github.workspace }}/tests" -v
-          cleanhatch --version
+          mkdir -p "$RUNNER_TEMP/l0-sdist"
+          tar -xzf dist/cleanhatch-*.tar.gz -C "$RUNNER_TEMP/l0-sdist"
+          sdist_dir=$(find "$RUNNER_TEMP/l0-sdist" -mindepth 1 -maxdepth 1 -type d -name 'cleanhatch-*' | head -n1)
+          python -m venv "$RUNNER_TEMP/l0-sdist-venv"
+          "$RUNNER_TEMP/l0-sdist-venv/bin/python" -m pip install "$sdist_dir[dev]"
+          cd "$sdist_dir"
+          "$RUNNER_TEMP/l0-sdist-venv/bin/python" -m pytest tests -q
       - uses: actions/upload-artifact@v4
         with:
           name: python-distributions
-          path: dist/
+          path: dist/*
           if-no-files-found: error
 
   publish:

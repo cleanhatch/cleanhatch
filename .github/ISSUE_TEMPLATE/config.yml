@@ -1,0 +1,17 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Cleanhatch L1 Pro Suite pricing
+    url: https://cleanhatch.dev/#pricing
+    about: Compare the L0 open kernel with the L1 commercial gate packs and audit suite.
+  - name: Support boundary and delivery terms
+    url: https://cleanhatch.dev/refund/
+    about: Self-serve Digital Kit with GitHub Issues for bug reports only; no 1-on-1, Slack, or Discord support.
+  - name: Cleanhatch documentation
+    url: https://docs.cleanhatch.dev
+    about: Installation, CLI reference, gate packs, and report verification.
+  - name: Contributing and licensing
+    url: https://github.com/cleanhatch/cleanhatch/blob/main/CONTRIBUTING.md
+    about: Bug reports, Tier 1 scenarios, Tier 2 code PRs, Apache-2.0, and the optional extra-rights process.
+  - name: Report a security issue privately
+    url: https://github.com/cleanhatch/cleanhatch/security/advisories/new
+    about: Do not open a public issue for security-sensitive reports.

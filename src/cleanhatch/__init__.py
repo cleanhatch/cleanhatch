@@ -1,3 +1,0 @@
-"""Cleanhatch: early development of temporal data pipeline tools."""
-
-__version__ = "0.0.1a0"

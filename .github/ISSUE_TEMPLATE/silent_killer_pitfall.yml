@@ -1,0 +1,140 @@
+name: Silent Killer / Field Pitfall
+description: Report a real production data failure that stayed green and silently corrupted results.
+title: "[Silent Killer] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Contribution & License
+
+        This form is for **Tier 1 scenarios**: a desensitized production
+        failure plus synthetic examples. You do **not** need to buy L1, own a
+        license key, or accept the L1 commercial terms to submit.
+
+        Tier 1 scenario text and synthetic examples are licensed under
+        [Apache-2.0](https://github.com/cleanhatch/cleanhatch/blob/main/LICENSE),
+        the same license as the L0 kernel. You keep your copyright. A Tier 2
+        code pull request is handled separately through the
+        [pull request template](https://github.com/cleanhatch/cleanhatch/blob/main/.github/PULL_REQUEST_TEMPLATE.md)
+        and [CONTRIBUTING.md](https://github.com/cleanhatch/cleanhatch/blob/main/CONTRIBUTING.md).
+
+        No extra-rights grant is requested here. If maintainers ever need
+        rights beyond Apache-2.0 for this specific contribution, they will
+        propose a separate, specific, recorded agreement that you may accept or
+        decline. Declining does not affect acceptance, attribution, or reward
+        eligibility.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Attribution & Privacy (GitHub Handle, Pseudonym, or Anonymous)
+
+        Quant, data, and AI engineers: you can be credited under your GitHub
+        `@handle`, a custom **Pseudonym** such as `QuantAnon-42`, or
+        **Anonymous**. A pseudonym protects your employer, fund, or client from
+        being identified.
+
+        Please submit only desensitized schema shapes and poison patterns. Never
+        paste proprietary data, credentials, client names, or personal paths.
+
+  - type: input
+    id: attribution
+    attributes:
+      label: Attribution & Privacy (GitHub Handle, Custom Pseudonym, or Anonymous)
+      description: How should we credit you? Write `Anonymous` for no public credit. GitHub still records the issue author; we cannot make the account anonymous.
+      placeholder: "@your-handle, QuantAnon-42, or Anonymous"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: contribution-tier
+    attributes:
+      label: Contribution Tier
+      description: Tier 1 needs a reproducible scenario. Tier 2 needs a separate PR with a vectorized rule and a canary test; this form can propose it, but the code is licensed through the PR template.
+      options:
+        - "Tier 1: Field Pitfall Scout (scenario only; maintainers write the rule)"
+        - "Tier 2: Core Recipe Architect PR (I will submit a rule + canary test)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: domain-pack
+    attributes:
+      label: Domain / Pack
+      description: Which pack should own this failure? Choose the closest fit; maintainers will confirm.
+      options:
+        - temporal-core
+        - market-bars-pit
+        - sec-fundamentals-pit
+        - ai-rag-ledger-guard
+        - domain-neutral / new pack proposal
+    validations:
+      required: true
+
+  - type: textarea
+    id: symptom
+    attributes:
+      label: Silent Killer Symptom
+      description: What did the pipeline report, what was actually wrong, and how did the bad value reach production or a backtest?
+      placeholder: |
+        The job finished green. The dashboard showed a 3% return...
+        The real issue was a revision visible only after the decision date...
+    validations:
+      required: true
+
+  - type: textarea
+    id: schema-and-time
+    attributes:
+      label: Schema & Temporal Coordinates
+      description: List the relevant columns and their temporal role. Use generic names if needed.
+      placeholder: |
+        entity: ticker
+        event_time: bar_close_time
+        knowledge_time / available_at: published_at
+        decision_time: rebalance_ts
+        version_tag: revision_id
+        affected columns: close, volume, revenue, order_total
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal Reproduction / Poison Pattern
+      description: Steps or a tiny synthetic example that reproduces the silent failure. Include the wrong output and the expected guard verdict.
+      placeholder: |
+        1. Build two rows with the same point-in-time key and different knowledge times.
+        2. Compute the feature without an as-of filter.
+        3. Expected: FAILED or WARNING with the offending rows identified.
+        4. Actual: PASSED with a corrupted value.
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact & Existing Detection Gap
+      description: Optional. Describe the downstream damage, frequency, and why current checks missed it.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: data-hygiene
+    attributes:
+      label: Privacy & Data Hygiene
+      options:
+        - label: I removed proprietary data, credentials, client names, and personal filesystem paths from this report.
+          required: true
+        - label: I understand this report may be published with the attribution I provided above.
+          required: true
+
+  - type: checkboxes
+    id: contribution-license
+    attributes:
+      label: Contribution License (Tier 1)
+      description: These confirmations cover the scenario text and synthetic examples in this issue. They do not cover a future code pull request.
+      options:
+        - label: I license the scenario text and synthetic examples in this report under the Apache License 2.0, the same license as the repository's L0 code (LICENSE).
+          required: true
+        - label: I understand that this form does not grant rights beyond Apache-2.0, and that any additional rights would require a separate, specific written agreement that I may accept or decline.
+          required: true

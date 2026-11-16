@@ -1,0 +1,52 @@
+#!/usr/bin/env sh
+# Atelier Null OpSec guard: reject personal identities, local path leaks,
+# and internal research material from the public L0 history.
+set -eu
+
+APPROVED_USER_NOREPLY='354919554+uncio-lintel@users.noreply.github.com'
+APPROVED_GITHUB_WEBFLOW='noreply@github.com'
+
+check_email() {
+  email=$1
+  [ -n "$email" ] || return 1
+  lower=$(printf '%s' "$email" | tr '[:upper:]' '[:lower:]')
+  case "$lower" in
+    *@cleanhatch.dev|"$APPROVED_USER_NOREPLY"|"$APPROVED_GITHUB_WEBFLOW") ;;
+    *) return 1 ;;
+  esac
+  EMAIL_BLOCK_PATTERN='jal'"an|qq\.com|163\.com"
+  if printf '%s\n' "$lower" | grep -Eq "($EMAIL_BLOCK_PATTERN)"; then
+    return 1
+  fi
+  return 0
+}
+
+EMAIL=$(git config user.email || true)
+if ! check_email "$EMAIL"; then
+  echo "🚨 [FATAL] Git email ($EMAIL) violates Atelier Null OpSec policy! Commit aborted!"
+  exit 1
+fi
+
+for variable in GIT_AUTHOR_EMAIL GIT_COMMITTER_EMAIL; do
+  value=$(printenv "$variable" || true)
+  if [ -n "$value" ] && ! check_email "$value"; then
+    echo "🚨 [FATAL] $variable ($value) violates Atelier Null OpSec policy! Commit aborted!"
+    exit 1
+  fi
+done
+
+# Assemble the identity pattern from fragments so that packaging the hook does
+# not ship the raw forbidden tokens it is meant to block.
+IDENTITY_PATTERN='Jal'"an|7is"'rain|qi\.jialiang|PIT_'"Gate"
+if git diff --cached --no-color --no-ext-diff -U0 | grep -Eiq "$IDENTITY_PATTERN"; then
+  echo "🚨 [FATAL] Staged content contains a private identity or project identifier! Commit aborted!"
+  exit 1
+fi
+
+if [ "${CLEANHATCH_ALLOW_INTERNAL:-0}" != "1" ]; then
+  if git diff --cached --name-only --diff-filter=ACMR | grep -Eq '^(reffer|docs)/'; then
+    echo "🚨 [FATAL] Staged files under reffer/ or docs/ are internal research material."
+    echo "    Set CLEANHATCH_ALLOW_INTERNAL=1 only for deliberate private-repo maintenance."
+    exit 1
+  fi
+fi

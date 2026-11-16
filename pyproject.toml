@@ -1,37 +1,116 @@
 [build-system]
-requires = ["setuptools>=77"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
 
 [project]
 name = "cleanhatch"
 dynamic = ["version"]
-description = "Early development of tools for AI and temporal data pipelines."
+description = "Domain-neutral temporal, causal, invariant, and lineage gates."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
-authors = [{name = "Uncio Lintel"}]
+authors = [{ name = "Uncio Lintel", email = "354919554+uncio-lintel@users.noreply.github.com" }]
+keywords = [
+    "point-in-time",
+    "bitemporal",
+    "data-quality",
+    "causality",
+    "lookahead",
+    "lineage",
+    "polars",
+    "duckdb",
+]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
-    "Environment :: Console",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Software Development :: Quality Assurance",
+    "Typing :: Typed",
+]
+dependencies = [
+    "polars>=1.0.0",
+    "duckdb>=1.0.0",
+    "pydantic>=2.7.0",
+    "tzdata>=2024.1; sys_platform == 'win32'",
 ]
 
-[project.urls]
-Repository = "https://github.com/cleanhatch/cleanhatch"
+[project.optional-dependencies]
+dev = [
+    "build>=1.2",
+    "pytest>=8.0",
+    "pyyaml>=6.0",
+    "ruff>=0.6",
+    "pyright>=1.1",
+]
 
 [project.scripts]
 cleanhatch = "cleanhatch.cli:main"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[project.urls]
+Homepage = "https://cleanhatch.dev"
+Documentation = "https://docs.cleanhatch.dev"
+Repository = "https://github.com/cleanhatch/cleanhatch"
+Source = "https://github.com/cleanhatch/cleanhatch"
 
-[tool.setuptools.dynamic]
-version = {attr = "cleanhatch.__version__"}
+[tool.hatch.version]
+path = "cleanhatch/__about__.py"
+
+[tool.hatch.build]
+# The root commercial alias is intentionally excluded from the Apache-2.0 L0
+# wheel/sdist. Hatchling otherwise auto-includes every LICENSE* file.
+exclude = [
+    "/LICENSE-COMMERCIAL.md",
+    "/TERMS-OF-SERVICE.md",
+    "/REFUND-POLICY.md",
+    "/PRIVACY.md",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["cleanhatch"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/cleanhatch",
+    "/tests",
+    "/README.md",
+    "/README_PUBLIC.md",
+    "/MIGRATION.md",
+    "/CONTRIBUTING.md",
+    "/LICENSE",
+    "/pyproject.toml",
+    "/.githooks",
+    "/.github/PULL_REQUEST_TEMPLATE.md",
+    "/.github/ISSUE_TEMPLATE/bug_report.yml",
+    "/.github/ISSUE_TEMPLATE/config.yml",
+    "/.github/ISSUE_TEMPLATE/silent_killer_pitfall.yml",
+]
+exclude = [
+    "/tests/private",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pyright]
+include = ["cleanhatch"]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"

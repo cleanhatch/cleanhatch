@@ -3,22 +3,22 @@
 **The cleanroom airlock for AI and temporal data pipelines.**
 
 [![PyPI](https://img.shields.io/pypi/v/cleanhatch.svg)](https://pypi.org/project/cleanhatch/)
-[![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-3776AB?logo=python&logoColor=white)](https://pypi.org/project/cleanhatch/)
+[![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14%20%7C%203.15-3776AB?logo=python&logoColor=white)](https://pypi.org/project/cleanhatch/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Architecture](https://img.shields.io/badge/architecture-zero--server%20%2F%20local--first-10B981.svg)](#design-notes)
+[![Architecture](https://img.shields.io/badge/L0-local--first-10B981.svg)](#design-notes)
 
 ```text
-  (Ingest / Revisions)
-          |
-          v
+                      (Ingest / Revisions)
+                              |
+                              v
   +----------------------------------------------------------+
-  |  CLEANROOM AIRLOCK                                       |
-  |  [ TemporalGate | CausalGate | InvarGate ]               |
+  |                   CLEANROOM AIRLOCK                      |
+  |     [ TemporalGate | CausalGate | InvarGate ]            |
   +----------------------------------------------------------+
-          |
-          v
-  LineageManifest (<= 2 KB JSON)
-  + optional L1 report (HTML / PDF)
+                              |
+                              v
+                  LineageManifest (<= 2 KB JSON)
+  L0 ends at bounded evidence; reports are a separate L1 capability
 ```
 
 Cleanhatch is a small, domain-neutral guard kernel for tables that must respect
@@ -40,8 +40,9 @@ pip install cleanhatch
 cleanhatch demo
 ```
 
-The demo builds five realistic panels in memory and measures the gate that owns
-each failure mode. No network, files, or fixtures are required. Output from a
+The demo builds five synthetic illustrative panels in memory and measures
+the gate that owns each failure mode. These cases are not customer incidents or
+production results. No network, files, or fixtures are required. Output from a
 local Windows 11 / Python 3.14 machine:
 
 ```text
@@ -62,12 +63,12 @@ Use `cleanhatch demo --json` for structured verdicts and evidence.
 
 ## Why Cleanhatch? (Architecture & Benchmark Matrix)
 
-| Capability | Ad-hoc Polars/Pandas scripts | Heavy data-quality suites (GX / Soda) | Cleanhatch (L0 kernel + L1 packs) |
+| Capability | Ad-hoc Polars/Pandas scripts | Heavy data-quality suites (GX / Soda) | Cleanhatch (Apache L0 + separate private L1 implementation) |
 | --- | --- | --- | --- |
 | Bitemporal as-of & revision diffs | Hand-rolled joins per project; revision ordering bugs surface late | Row/table expectations, not bitemporal semantics | `TemporalGate` resolves the latest visible revision and diffs two as-of states |
 | Lookahead-leak probes (`CausalGate`) | None unless you build a custom harness | Monitors data, not transform causality | Re-runs the transform with future rows removed and future values perturbed |
 | Inactive/halt-aware rolling MAD (`InvarGate`) | Manual `when(...)` masks drift across every rule | Static thresholds turn halts into false positives or silent `fillna` | `skip_when` masks halt and warm-up rows; rolling MAD resists one flash spike |
-| Infrastructure footprint | Notebook + cron + warehouse | Server/cloud runner, metadata store, orchestration | Zero server, in-process Polars; L1 adds a single-file HTML/PDF report |
+| Infrastructure footprint | Notebook + cron + warehouse | Server/cloud runner, metadata store, orchestration | L0 runs locally; the separate private L1 implementation includes local report export |
 | Agent repair payload (<= 2,048 B) | Ad-hoc error strings with unbounded context | Dashboard links and long JSON payloads | Bounded `ai_summary.json` with structured, repair-oriented failures |
 
 ### Measured 1,000,000-row benchmark
@@ -90,7 +91,10 @@ Polars 2.1.0, DuckDB 2.0.0, cleanhatch 0.1.0. Median of 3 runs.
 | `LineageManifest.to_ai_summary_json` | bounded agent payload (<=2048 bytes) | 0.1 ms |
 
 Latency includes Python and serialization overhead and is hardware-dependent.
-Rerun the script on your machine before quoting these numbers.
+These are reported measurements from the private engineering benchmark harness,
+which is not included in public L0. The public `cleanhatch demo` reproduces
+synthetic gate examples; it is not this timing benchmark. Measure your own
+workload and environment before making performance decisions.
 
 ## The Four Core Gates (L0 Open Kernel)
 
@@ -243,10 +247,12 @@ manifests are progressively compacted rather than flooding the context window.
 
 ## Domain Gate Packs & Canary Poisoning Suites (L0 Protocol + L1 Pro Packs)
 
-The L0 open kernel ships the `GatePack` protocol and the free `temporal-core`
-pack. The three vertical packs are distributed in the separate private
-`cleanhatch-l1` package (or loaded from third-party Python entry points). Every
-pack keeps the same interface:
+The Apache-2.0 L0 kernel includes the `GatePack` protocol and the
+`temporal-core` pack. Three additional domain packs are implemented in a
+separate proprietary L1 suite, outside this repository. L1 is not available
+from public PyPI and has no public checkout. The table documents current local
+engineering implementation and synthetic tests; it does not describe a public
+L1 release or customer outcomes. Every pack keeps the same interface:
 
 ```python
 from cleanhatch import available_packs, get_pack
@@ -262,16 +268,14 @@ report = get_pack("temporal-core").validate(frame)
 | `sec-fundamentals-pit` | L1 Pro | 11 | Same-day filing leakage, balance-sheet and gross-profit identities, 1000x unit jumps, currency switches, restatement time travel, TTM window construction | 11/11 poisoned panels caught |
 | `ai-rag-ledger-guard` | L1 Pro | 8 | Order-total and line-item hallucinations, unit-price math, discount and tax bounds, multi-currency drift, mutable invoice versions, RAG post-cutoff contamination | 10/10 poisoned panels caught |
 
-Rule counts are the full gate-check surface, including table-level checks and
-declared `SKIPPED` warm-up exemptions. The canary number is the size of the
-pack's executable poisoning suite; `cleanhatch canary` verifies that every
-poisoned panel is intercepted. Proprietary L1 rule formulas are distributed only
-in the private `cleanhatch-l1` package; this README documents their contract and
-canary coverage, not their implementation.
+Rule counts describe the declared checks, including table-level checks and
+`SKIPPED` warm-up exemptions. Canary cases use synthetic panels and demonstrate
+the configured test behavior only. L1 formulas are proprietary and are not in
+this repository. The following L1 commands apply only to private local
+engineering builds; no public install source is available:
 
 ```bash
-pip install cleanhatch-l1          # private distribution / private index
-cleanhatch canary
+cleanhatch canary --pack market-bars-pit
 cleanhatch validate bars.parquet --pack market-bars-pit
 cleanhatch init-recipe market-bars-pit --out ./gates/ --agents-md
 ```
@@ -280,8 +284,8 @@ cleanhatch init-recipe market-bars-pit --out ./gates/ --agents-md
 guardrail file. It exposes column mappings, thresholds, and the canary entry
 point without ejecting the operator source.
 
-An L0-only installation still discovers packs registered elsewhere, but it does
-not import their implementation just to list names:
+An L0-only installation can discover third-party packs registered in its
+environment, but it does not import their implementation just to list names:
 
 ```python
 from cleanhatch import PackNotInstalledError, register_pack
@@ -304,8 +308,10 @@ in-house-ledger = "my_company.packs:MyInHousePack"
 
 ## L1 Pro Single-File HTML & PDF Audit Reports
 
-Report export is an L1 capability and lives in the private `cleanhatch-l1`
-package; the L0 kernel exits before parsing `--report-*` flags.
+L0 contains no report exporter, report verification command, or paid-license
+code. Report export is a separate proprietary L1 capability in private local
+builds; those builds and a public checkout are not available from this
+repository or public PyPI.
 
 ```bash
 cleanhatch-l1 validate bars.parquet --pack market-bars-pit \
@@ -314,59 +320,118 @@ cleanhatch-l1 diff before.parquet after.parquet --report-html diff.html
 cleanhatch-l1 verify-report audit.html
 ```
 
-The HTML report is one self-contained file: inline CSS, inline SVG, an embedded
-canonical JSON evidence payload, and an offline WebCrypto verifier. The PDF uses
-only PDF 1.4 primitives and standard fonts, so it needs no browser, external
-asset, or network. `verify-report` recomputes the report digest and checks the
-visible seal against the embedded payload; a modified file exits with code `2`.
-This is a **content-consistency check, not a digital signature** and not a
-tamper-proof proof.
+In the private L1 implementation, HTML and PDF reports are produced locally.
+The HTML digest check is a **content-consistency check, not a digital signature**:
+it does not prove that a file was never edited, since edited content can be
+re-hashed. The local `cleanhatch-l1 verify-report` command checks HTML
+consistency and can verify signed PDFs through the separate verifier when the
+private L1 PDF extra is installed. The browser page at `/verify/` checks HTML
+consistency only and does not upload the file; it does not verify PDF signatures.
+The Apache-2.0 `cleanhatch-verify` source and PyPI release are pending, so no
+public install command is available. Supply the trusted issuer material for a
+signed PDF.
 
-| Build | Report seal | Intended use |
+| Build | Report seal | Status |
 | --- | --- | --- |
-| Community Evaluation Build | `COMMUNITY EVALUATION BUILD — UNLICENSED` badge and watermark | Local evaluation and sharing; every report carries the watermark |
-| L1 Pro Compliance Suite | Offline Ed25519 `license.cert` seal with the organization badge and `CH-XXXX-XXXX` trace code | Team review, investment committee packs, and client delivery |
+| Legacy evaluation exporter | `COMMUNITY EVALUATION BUILD — UNLICENSED` badge and watermark | Historical L1 flow; not part of the Apache L0 package |
+| Current private L1 implementation | Signed PDF can bind a grant and workspace key; HTML includes verification evidence | Local engineering implementation; no public package or checkout |
 
-The current L1 certificate is the legacy 14-day offline lease certificate. It is
-verified offline with no phone-home and no report-path network call. An expired
-or revoked lease falls back to the unlicensed or revoked watermark instead of
-silently producing a sealed report. A permanent purchase grant, CMS-signed PDF,
-and Marimo Diff/What-if are planned but **not implemented** in this release.
+The private implementation uses local data execution. Initial delivery and
+entitlement activation use the network; optional status refresh also uses the
+network. Local use can continue under a valid grant. The 14-day signed status
+snapshot records status freshness, not a lease or license term. A purchased
+suite is one SKU for one workspace: versions lawfully downloaded during its
+365-calendar-day update window remain usable afterward, and the window covers
+only the purchased suite. L1 signed-PDF generation requires the `pdf` extra and
+a workspace signing key. The independent Apache-2.0 `cleanhatch-verify` CLI
+is implemented, but its public source and PyPI release are pending; signed PDFs
+require the trusted issuer material applicable to that report.
 
 ## Contribute a Silent Killer ("Field Pitfalls")
 
-Quant, data, and AI engineers: if you have lost hours to a pipeline that stayed
-green while the data was wrong, submit the reproducible scenario through the
-**[Silent Killer / Field Pitfall Issue Form](.github/ISSUE_TEMPLATE/silent_killer_pitfall.yml)**.
+Quant, data, and AI engineers can submit a reproducible synthetic test case
+through the **[Silent Killer / Field Pitfall Issue Form](.github/ISSUE_TEMPLATE/silent_killer_pitfall.yml)**.
+Do not submit private datasets or claim an incident that has not been verified.
 
 You choose the attribution. Contributors may be credited under a **GitHub
 `@handle` or a custom `Pseudonym`** (for example `QuantAnon-42`) so an employer,
 fund, or client is never exposed. Desensitized schema shapes and poison patterns
 are enough; do not paste proprietary data.
 
-Two recognition tiers keep the loop honest:
-
-| Tier | What you submit | Recognition |
-| --- | --- | --- |
-| **Tier 1: Field Pitfall Scout** | A reproducible production pitfall via the Issue Form. We write the rule and add it to the appropriate pack. | Permanent attribution in `/silent-killers/` and release notes, plus a **20% OFF L1 Pro Suite coupon** |
-| **Tier 2: Core Recipe Architect** | A merged PR with a vectorized rule and a canary poisoning test (capped at 2 per month). | Permanent attribution plus a complimentary **1-year L1 Contributor License (`Contributor Edition`)** |
-
-Tier 1 turns field experience into coverage without requiring you to write
-Polars. Tier 2 rewards engineers who ship the rule and the proof that it catches
-the failure. Both tiers are attributed exactly as you request: handle,
-pseudonym, or anonymous.
+Contributor recognition is separate from the one-time L1 purchase grant.
+The DRAFT contributor program proposes permanent attribution for accepted
+submissions, a conditional 20% L1 discount for a reproduced test case, and a
+one-year Contributor Edition license for a merged rule and canary contribution.
+These proposed rewards are subject to the DRAFT contributor terms and are not a
+public L1 checkout offer. A credited synthetic case does not establish a
+production incident.
 
 ## Support Boundary
 
-Cleanhatch L1 is a **Self-serve Digital Kit — Includes GitHub Issues for bug reports only.**
+Installation, product-defect, and entitlement/download assistance is
+self-serve. Contact [support@cleanhatch.dev](mailto:support@cleanhatch.dev) for
+entitlement or download problems. Use public GitHub Issues for reproducible
+code defects; do not post private data or schemas. Custom field mappings,
+connectors, and rules are scoped and quoted separately. No public L1 checkout
+is available.
 
-- **No 1-on-1 code debugging or Slack/Discord support.** A good report is a reproducible defect in the delivered code, gate packs, CLI, report verifier, or documentation; live debugging, private channels, and custom rule writing are out of scope.
-- Custom data-source rules, pipeline integration, and private deployment are scoped as an **L3 Custom Airlock Setup** engagement at **$1,500** per fixed-scope delivery.
-- Once the License Key is activated or the L1 bundle is downloaded, digital delivery is complete and no-reason refunds are not offered, subject to the terms shown at checkout and any non-waivable statutory rights; see the DRAFT policies below, which require legal and MoR review before going live.
-- Read the binding documents before purchase: [Terms of Service](https://cleanhatch.dev/terms/), [Commercial License](https://cleanhatch.dev/terms/), [Privacy Policy](https://cleanhatch.dev/privacy/), and [Refund Policy](https://cleanhatch.dev/refund/). They are marked **DRAFT** pending legal and MoR platform review.
+Review the [Terms of Service](https://cleanhatch.dev/terms/),
+[Privacy Policy](https://cleanhatch.dev/privacy/), and
+[Refund Policy](https://cleanhatch.dev/refund/) before a future purchase. These
+commercial policies remain **DRAFT** pending legal and Merchant of Record
+review.
 
-The L0 kernel remains Apache-2.0 and free to evaluate, share, and modify under
-that license.
+## License
+
+Copyright 2026 Atelier Null.
+
+The Cleanhatch L0 kernel in this repository, including its public `GatePack`
+protocol and built-in `temporal-core` pack, is licensed under the Apache
+License 2.0. Subject to the Apache-2.0 terms and notices, you may use it
+(including commercially), modify it, and redistribute source or binaries.
+Preserve the required license, copyright and NOTICE material and mark modified
+files as the license requires. These rights are not limited to evaluation or
+non-commercial use.
+
+The L0 package does not include the report exporter, paid-license code, or
+proprietary L1 domain-pack implementations. L1 is a separate product under
+separate DRAFT commercial terms; those terms do not narrow rights already
+granted for Apache-licensed L0 versions. See [LICENSE](LICENSE) for the
+license terms.
+
+## L0/L1 migration
+
+The 0.1.x split keeps the domain-neutral kernel in `cleanhatch` and moves
+commercial report, licensing, and domain-pack functionality to the private
+`cleanhatch-l1` distribution. This mapping applies to earlier combined or
+private engineering builds where these APIs were present. Previously published
+public PyPI distributions contained L0 only and did not include these
+commercial modules.
+
+| Earlier combined/private API | Private L1 replacement |
+| --- | --- |
+| `cleanhatch.license`, `cleanhatch.license_client` | `cleanhatch_l1.license`, `cleanhatch_l1.license_client` |
+| `cleanhatch.report`, `cleanhatch.bundle` | `cleanhatch_l1.report`, `cleanhatch_l1.bundle` |
+| `cleanhatch.packs.market_bars_pit` | `cleanhatch_l1.packs.market_bars_pit` |
+| `cleanhatch.packs.sec_fundamentals_pit` | `cleanhatch_l1.packs.sec_fundamentals_pit` |
+| `cleanhatch.packs.ai_rag_ledger_guard` | `cleanhatch_l1.packs.ai_rag_ledger_guard` |
+| `cleanhatch validate/diff --report-html/--report-pdf` | `cleanhatch-l1 validate/diff ... --report-html/--report-pdf` |
+| `cleanhatch verify-report` | `cleanhatch-l1 verify-report` |
+| `cleanhatch doctor` license section | `cleanhatch-l1 license health` |
+
+Current L0 ships no forwarding stubs, so an old import fails with the standard
+`ModuleNotFoundError`; that signals the package split, not a data or license
+failure. There is no public L1 package or checkout. Authorized users of a
+private local engineering build install its L1 wheel from the supplied local
+path. Legacy `license.cert` files remain 14-day offline leases; explicit,
+order-backed migration creates a separate V2 grant, whose 14-day signed status
+snapshot records freshness rather than the grant term.
+
+Versions previously published under Apache-2.0 remain usable, modifiable, and
+redistributable under that license. Removing L1 functionality from a new L0
+release does not revoke rights already granted for older Apache-2.0 versions.
+L1 remains a separate proprietary distribution and is not relicensed as
+Apache-2.0.
 
 ## CLI Reference
 
@@ -384,6 +449,8 @@ cleanhatch canary
 cleanhatch canary --pack market-bars-pit
 cleanhatch init-recipe market-bars-pit --out ./gates/ --agents-md
 
+# The following L1 examples require a private local engineering build;
+# no public L1 package or checkout is available.
 cleanhatch-l1 validate bars.parquet --pack market-bars-pit \
   --report-html audit.html --report-pdf audit.pdf
 cleanhatch-l1 diff snapshot_a.parquet snapshot_b.parquet --report-html diff.html
@@ -432,25 +499,26 @@ python -m pyright
 python -m pytest tests -q
 ```
 
-CI runs lint, format, type checks, L0 tests, the demo, and an L0 sdist/wheel
-build with a package-boundary assertion on Ubuntu and Windows across Python
-3.11, 3.12, and 3.13. The private engineering repository additionally runs the
-L1 package tests, site/corpus checks, and the benchmark harness; those paths are
-not part of the public L0 repository.
+CI runs lint, format, type checks, L0 tests, and the demo on Ubuntu and Windows
+across Python 3.11–3.15. The Ubuntu packaging matrix builds and validates the
+L0 sdist and wheel on Python 3.12, 3.14, and 3.15. The private engineering
+repository additionally runs the L1 package tests, site/corpus checks, and the
+benchmark harness; those paths are not part of the public L0 repository.
 
 ## Publishing
 
 Release distributions are built only on GitHub Actions, never on a developer
 machine. The `Build and publish` workflow in `.github/workflows/publish.yml`
-tests the L0 kernel on Ubuntu and Windows across Python 3.11, 3.12, and 3.13,
-builds the wheel and source distribution, checks their metadata, and verifies
-installation from both artifacts outside the source checkout.
+tests the L0 kernel on Ubuntu and Windows across Python 3.11–3.15, builds and
+validates the wheel and source distribution on Ubuntu with Python 3.12, 3.14,
+and 3.15, and verifies installation from both artifacts outside the source
+checkout. Only the Python 3.12 build uploads release artifacts.
 
 A normal push to `main` or a pull request runs the test and build jobs only. The
 PyPI publish job is restricted to a manual `workflow_dispatch` run on `main` and
 uses PyPI OIDC trusted publishing; no API token is stored in the repository.
 
-Before publishing 0.1.0:
+Before publishing a release:
 
 1. Confirm the existing PyPI trusted publisher:
 
@@ -472,12 +540,3 @@ and the corresponding tests and documentation.
 
 The GitHub repository's visibility is independent of PyPI: publishing makes the
 wheel, source distribution, metadata, and README publicly downloadable.
-
-## License
-
-Copyright 2026 Atelier Null.
-
-The L0 kernel is Apache 2.0. See [LICENSE](LICENSE). The separate
-`cleanhatch-l1` distribution is proprietary and its commercial terms remain
-marked DRAFT; see [MIGRATION.md](MIGRATION.md) for the split and prior-version
-rights.

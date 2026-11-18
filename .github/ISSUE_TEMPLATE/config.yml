@@ -1,11 +1,17 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Cleanhatch L1 Pro Suite pricing
+  - name: Cleanhatch L1 preview
     url: https://cleanhatch.dev/#pricing
-    about: Compare the L0 open kernel with the L1 commercial gate packs and audit suite.
-  - name: Support boundary and delivery terms
+    about: Review the single pre-launch L1 suite. Public package and checkout are not available.
+  - name: Draft refund policy
     url: https://cleanhatch.dev/refund/
-    about: Self-serve Digital Kit with GitHub Issues for bug reports only; no 1-on-1, Slack, or Discord support.
+    about: Read the draft refund and entitlement boundary; no public checkout is available.
+  - name: Cleanhatch L1 preview and purchase boundary
+    url: https://cleanhatch.dev/purchase/
+    about: Review the single L1 suite scope. Public package and checkout are not available.
+  - name: Support boundary and delivery terms
+    url: https://cleanhatch.dev/purchase/
+    about: Installation and product-defect help are self-serve; email support@cleanhatch.dev for entitlement/download help. Do not post private data. Custom mappings, connectors, and rules are scoped separately.
   - name: Cleanhatch documentation
     url: https://docs.cleanhatch.dev
     about: Installation, CLI reference, gate packs, and report verification.

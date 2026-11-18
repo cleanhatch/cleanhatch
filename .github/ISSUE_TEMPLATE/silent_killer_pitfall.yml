@@ -1,5 +1,5 @@
 name: Silent Killer / Field Pitfall
-description: Report a real production data failure that stayed green and silently corrupted results.
+description: Share a reproducible synthetic test case for a Python data pipeline pitfall.
 title: "[Silent Killer] "
 body:
   - type: markdown
@@ -7,9 +7,12 @@ body:
       value: |
         ## Contribution & License
 
-        This form is for **Tier 1 scenarios**: a desensitized production
-        failure plus synthetic examples. You do **not** need to buy L1, own a
-        license key, or accept the L1 commercial terms to submit.
+        This form is for **Tier 1 scenarios**: a reproducible synthetic test
+        case. You do not need to claim or prove a production incident. Tier 1
+        contributors do not need to buy L1, own a license key, or accept the L1
+        commercial terms to submit.
+        Published registry pages describe synthetic examples and do not claim
+        customer outcomes.
 
         Tier 1 scenario text and synthetic examples are licensed under
         [Apache-2.0](https://github.com/cleanhatch/cleanhatch/blob/main/LICENSE),
@@ -31,8 +34,9 @@ body:
 
         Quant, data, and AI engineers: you can be credited under your GitHub
         `@handle`, a custom **Pseudonym** such as `QuantAnon-42`, or
-        **Anonymous**. A pseudonym protects your employer, fund, or client from
-        being identified.
+        **Anonymous**. A pseudonym can avoid naming your employer, fund, or
+        client, but it does not guarantee anonymity. GitHub still records the
+        issue author, and any selected public credit is visible in the registry.
 
         Please submit only desensitized schema shapes and poison patterns. Never
         paste proprietary data, credentials, client names, or personal paths.
@@ -75,10 +79,10 @@ body:
     id: symptom
     attributes:
       label: Silent Killer Symptom
-      description: What did the pipeline report, what was actually wrong, and how did the bad value reach production or a backtest?
+      description: Describe the synthetic scenario and expected gate behavior. If it is based on something you observed, label it as unverified context and omit identifying or confidential details.
       placeholder: |
-        The job finished green. The dashboard showed a 3% return...
-        The real issue was a revision visible only after the decision date...
+        Synthetic example: a historical query selects a revision published after the decision date...
+        Expected: the temporal gate excludes that revision...
     validations:
       required: true
 
@@ -114,7 +118,7 @@ body:
     id: impact
     attributes:
       label: Impact & Existing Detection Gap
-      description: Optional. Describe the downstream damage, frequency, and why current checks missed it.
+      description: Optional. Describe the hypothetical downstream effect or why existing checks would miss this synthetic scenario. Do not claim customer or production impact.
     validations:
       required: false
 

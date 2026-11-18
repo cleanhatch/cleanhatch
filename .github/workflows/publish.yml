@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python: ["3.11", "3.12", "3.13"]
+        python: ["3.11", "3.12", "3.13", "3.14", "3.15"]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -39,14 +39,18 @@ jobs:
         run: cleanhatch demo
 
   build:
-    name: build L0 sdist and wheel
+    name: build L0 sdist and wheel (py${{ matrix.python }})
     needs: test
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.14", "3.15"]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python }}
       - name: Install build tools
         run: python -m pip install build twine
       - name: Build distributions and check metadata
@@ -110,7 +114,8 @@ jobs:
           assert "cleanhatch/demo.py" in joined, "demo module missing from artifacts"
           assert "cleanhatch/analysis.py" in joined, "shared analysis module missing"
           assert "README.md" in joined, "README.md missing from artifacts"
-          assert "MIGRATION.md" in joined, "MIGRATION.md missing from artifacts"
+          for obsolete in ("README_PUBLIC.md", "MIGRATION.md"):
+              assert obsolete not in joined, f"obsolete document remains in artifacts: {obsolete}"
           print(f"verified {len(artifacts)} artifact(s), {len(members)} member(s)")
           PY
       - name: Test installed wheel outside the checkout
@@ -136,6 +141,7 @@ jobs:
           cd "$sdist_dir"
           "$RUNNER_TEMP/l0-sdist-venv/bin/python" -m pytest tests -q
       - uses: actions/upload-artifact@v4
+        if: matrix.python == '3.12'
         with:
           name: python-distributions
           path: dist/*

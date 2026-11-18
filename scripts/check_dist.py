@@ -114,7 +114,7 @@ def check_l0(dist_dir: Path) -> None:
     assert "tests/private/test_site_and_geo.py" not in sdist_names
     for required in (
         "CONTRIBUTING.md",
-        "README_PUBLIC.md",
+        "README.md",
         ".githooks/pre-commit",
         ".github/PULL_REQUEST_TEMPLATE.md",
         ".github/ISSUE_TEMPLATE/bug_report.yml",
@@ -122,10 +122,14 @@ def check_l0(dist_dir: Path) -> None:
         ".github/ISSUE_TEMPLATE/silent_killer_pitfall.yml",
     ):
         assert required in sdist_names, required
+    for removed in ("README_PUBLIC.md", "MIGRATION.md"):
+        assert removed not in sdist_names, removed
     assert not any(name.startswith(".github/workflows/") for name in sdist_names)
     assert "LICENSE" in sdist_names
-    assert "MIGRATION.md" in sdist_names
     assert "pyproject.toml" in sdist_names
+    readme = sdist_blobs["README.md"].decode("utf-8")
+    assert "README_PUBLIC.md" not in readme
+    assert "MIGRATION.md" not in readme
     print(f"L0 OK: {wheels[0].name}, {sdists[0].name}")
 
 

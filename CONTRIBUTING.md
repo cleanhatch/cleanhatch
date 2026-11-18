@@ -93,7 +93,7 @@ arrangement is possible.
 
 Tier 1 does not require code, a DCO sign-off, an L1 purchase, or any extra
 rights. Accepted scenarios are eligible for the attribution and reward described
-in the [README](README_PUBLIC.md).
+in the [README](README.md).
 
 ## Tier 2: Core Recipe Architect (code PR)
 
@@ -124,7 +124,7 @@ and applied prospectively.
 
 Tier 2 does not require an L1 purchase, a CLA, or any extra rights. Accepted
 contributions are eligible for the attribution and reward described in the
-[README](README_PUBLIC.md), subject to the program terms and the
+[README](README.md), subject to the program terms and the
 `Contributor Edition` restrictions stated there.
 
 ## If we need rights beyond Apache-2.0
@@ -222,7 +222,7 @@ right is independent of any extra-rights decision. Merging a contribution means
 it is accepted under Apache-2.0; it does not create a support contract or a
 delivery commitment.
 
-Tier 1 and Tier 2 rewards are described in the [README](README_PUBLIC.md). They
+Tier 1 and Tier 2 rewards are described in the [README](README.md). They
 are subject to the stated program terms, caps, and the `Contributor Edition`
 restrictions. No purchase and no extra-rights acceptance is required to be
 eligible. Rewards have no cash value and are not compensation for a copyright
@@ -234,7 +234,7 @@ correct the attribution where practicable.
 ## Links
 
 - [Apache-2.0 license](LICENSE)
-- [README and contribution tiers](README_PUBLIC.md)
+- [README and contribution tiers](README.md)
 - [Bug report form](.github/ISSUE_TEMPLATE/bug_report.yml)
 - [Silent Killer / Field Pitfall form](.github/ISSUE_TEMPLATE/silent_killer_pitfall.yml)
 - [Pull request template](.github/PULL_REQUEST_TEMPLATE.md)

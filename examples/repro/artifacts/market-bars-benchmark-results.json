@@ -1,0 +1,104 @@
+{
+  "dataset": "BTCUSDT-1h-2024-01.zip",
+  "archive_sha256": "cf873a185bd5b24b8e00034e49583fcb49928e0c3a45c6fc27a632a683655417",
+  "rows": 744,
+  "common_input_columns": [
+    "symbol",
+    "decision_time",
+    "value=close"
+  ],
+  "matched_rules": [
+    "value is non-null and finite",
+    "value > 0",
+    "(symbol, decision_time) is unique"
+  ],
+  "timing_scope": "one untimed warm-up per validator and case; measured median covers validation calls only, while ZIP reading, normalization, Polars-to-pandas conversion, rule construction, and Python/library startup are excluded",
+  "execution": "serial; each validator sees the same prepared clean and poisoned rows",
+  "great_expectations_analytics": "disabled",
+  "versions": {
+    "python": "3.12.16",
+    "cleanhatch": "0.1.0",
+    "polars": "2.1.0",
+    "great-expectations": "1.25.0",
+    "pandas": "2.3.3",
+    "pandera": "0.36.0",
+    "cleanhatch-l1": "0.1.0"
+  },
+  "results": {
+    "clean": {
+      "Cleanhatch L0": {
+        "verdict": "PASSED",
+        "median_ms": 5.7199,
+        "runs": 5
+      },
+      "Great Expectations": {
+        "verdict": "PASSED",
+        "median_ms": 34.236,
+        "runs": 5
+      },
+      "Pandera": {
+        "verdict": "PASSED",
+        "median_ms": 2.3339,
+        "runs": 5
+      }
+    },
+    "negative_close": {
+      "Cleanhatch L0": {
+        "verdict": "BLOCKED",
+        "median_ms": 3.9516,
+        "runs": 5
+      },
+      "Great Expectations": {
+        "verdict": "BLOCKED",
+        "median_ms": 34.477,
+        "runs": 5
+      },
+      "Pandera": {
+        "verdict": "BLOCKED",
+        "median_ms": 7.5524,
+        "runs": 5
+      }
+    }
+  },
+  "l1_full_pack": {
+    "pack": "market-bars-pit",
+    "scope": "full L1 market-bars-pit pack; separate from matched GE/Pandera rules",
+    "results": {
+      "clean": {
+        "verdict": "CONTINUE",
+        "status": "WARNING",
+        "failed_checks": [],
+        "warnings": [
+          "ROLLING_MAD_SPIKE"
+        ],
+        "median_ms": 19.6118,
+        "runs": 5
+      },
+      "negative_close": {
+        "verdict": "BLOCKED",
+        "status": "FAILED",
+        "failed_checks": [
+          "OHLC_LOW_LE_OPEN_CLOSE",
+          "POSITIVE_FINITE_PRICES"
+        ],
+        "warnings": [
+          "ROLLING_MAD_SPIKE"
+        ],
+        "median_ms": 22.8546,
+        "runs": 5
+      },
+      "pre_close_availability": {
+        "verdict": "BLOCKED",
+        "status": "FAILED",
+        "failed_checks": [
+          "BAR_CLOSE_CAUSALITY"
+        ],
+        "warnings": [
+          "ROLLING_MAD_SPIKE"
+        ],
+        "median_ms": 20.6311,
+        "runs": 5
+      }
+    }
+  }
+}

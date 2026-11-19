@@ -61,6 +61,21 @@ local Windows 11 / Python 3.14 machine:
 
 Use `cleanhatch demo --json` for structured verdicts and evidence.
 
+## Reproduce checks on public market data
+
+From a source checkout, install the L0 package and run the bundled real-data demo:
+
+```bash
+python -m pip install -e .
+python -m examples.repro.market_bars.demo
+```
+
+The demo reads the source-only Binance Vision BTCUSDT January 2024 ZIP
+offline, then shows deterministic blocking faults. See the [reproduction guide](examples/repro/market_bars/README.md) for the downloader, L1 pack, fault
+matrix, and serial Great Expectations/Pandera comparison. Binance data is CC
+BY-NC-SA 4.0 and provided for non-commercial open-source data-science
+evaluation. The sample is excluded from wheels and source distributions.
+
 ## Why Cleanhatch? (Architecture & Benchmark Matrix)
 
 | Capability | Ad-hoc Polars/Pandas scripts | Heavy data-quality suites (GX / Soda) | Cleanhatch (Apache L0 + separate private L1 implementation) |
@@ -496,7 +511,7 @@ python -m pip install -e ".[dev]"
 python -m ruff check .
 python -m ruff format --check .
 python -m pyright
-python -m pytest tests -q
+python -m pytest tests examples/repro/market_bars -q
 ```
 
 CI runs lint, format, type checks, L0 tests, and the demo on Ubuntu and Windows

@@ -1,0 +1,14 @@
+[project]
+name = "cleanhatch-market-bars-comparison"
+version = "0.1.0"
+description = "Pinned comparison environment for the Cleanhatch market-bars sample."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "cleanhatch==0.1.2",
+    "great-expectations==1.25.0",
+    "pandas==2.3.3",
+    "pandera[pandas]==0.36.0",
+]
+
+[tool.uv.sources]
+cleanhatch = { path = "../../../..", editable = true }

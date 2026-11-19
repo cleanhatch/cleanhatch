@@ -1,0 +1,35 @@
+dataset: BTCUSDT-1h-2024-01.zip rows=744 sha256=cf873a185bd5b24b8e00034e49583fcb49928e0c3a45c6fc27a632a683655417
+L0 real sample: PASSED (status=PASSED, failed=[], warnings=[])
+L0 injected negative close: BLOCKED (status=FAILED, failed=['POSITIVE_FINITE_CLOSE'], warnings=[])
+L0 injected pre-close availability: BLOCKED (status=FAILED, failed=['knowledge_time_causality'], warnings=[])
+L0 injected availability after decision: BLOCKED (status=FAILED, failed=['AVAILABILITY_BEFORE_DECISION'], warnings=[])
+L0 injected non-finite close: BLOCKED (status=FAILED, failed=['POSITIVE_FINITE_CLOSE'], warnings=[])
+L1 market-bars-pit real sample: CONTINUE (status=WARNING, failed=[], warnings=['ROLLING_MAD_SPIKE'])
+L1 injected negative close: BLOCKED (status=FAILED, failed=['OHLC_LOW_LE_OPEN_CLOSE', 'POSITIVE_FINITE_PRICES'], warnings=['ROLLING_MAD_SPIKE'])
+L1 injected pre-close availability: BLOCKED (status=FAILED, failed=['BAR_CLOSE_CAUSALITY'], warnings=['ROLLING_MAD_SPIKE'])
+L1 fault 01/12 OHLC_HIGH_GE_OPEN_CLOSE: BLOCKED target=FAILED expected=FAILED failed=['OHLC_HIGH_GE_OPEN_CLOSE']
+  construct: sorted row 40: high := min(open, close)-1; low := min(open, close)-2; quote_volume reset inside the new range
+L1 fault 02/12 OHLC_LOW_LE_OPEN_CLOSE: BLOCKED target=FAILED expected=FAILED failed=['OHLC_LOW_LE_OPEN_CLOSE']
+  construct: sorted row 40: low := min(open, close)+1; high := max(open, close)+2; quote_volume reset inside the new range
+L1 fault 03/12 OHLC_HIGH_GE_LOW: BLOCKED target=FAILED expected=FAILED failed=['OHLC_HIGH_GE_OPEN_CLOSE', 'OHLC_LOW_LE_OPEN_CLOSE', 'OHLC_HIGH_GE_LOW', 'VWAP_ENVELOPE']
+  construct: sorted row 40: open=close=100, high=99, low=101; impossible range also violates the related high/open and low/open relations
+L1 fault 04/12 POSITIVE_FINITE_PRICES: BLOCKED target=FAILED expected=FAILED failed=['POSITIVE_FINITE_PRICES']
+  construct: sorted row 40: low := 0
+L1 fault 05/12 NON_NEGATIVE_FINITE_VOLUMES: BLOCKED target=FAILED expected=FAILED failed=['NON_NEGATIVE_FINITE_VOLUMES']
+  construct: sorted row 40: volume := -1 and quote_volume := -close
+L1 fault 06/12 HALT_ZERO_AMPLITUDE: BLOCKED target=FAILED expected=FAILED failed=['HALT_ZERO_AMPLITUDE']
+  construct: sorted row 40: is_trading := false while its original OHLC range remains non-flat
+L1 fault 07/12 VWAP_ENVELOPE: BLOCKED target=FAILED expected=FAILED failed=['VWAP_ENVELOPE']
+  construct: sorted row 40: quote_volume := volume * high * 1.01, exceeding the 1 bps envelope tolerance
+L1 fault 08/12 BAR_CLOSE_CAUSALITY: BLOCKED target=FAILED expected=FAILED failed=['BAR_CLOSE_CAUSALITY']
+  construct: sorted row 40: available_at and decision_time := bar_close_time-1ms
+L1 fault 09/12 UNIQUE_BAR_COORDINATE: BLOCKED target=FAILED expected=FAILED failed=['UNIQUE_BAR_COORDINATE']
+  construct: append a duplicate of sorted row 40 with the same timestamp, symbol, and availability coordinate
+L1 fault 10/12 WARMUP_WINDOW_SKIP: PASSED target=SKIPPED expected=SKIPPED failed=[]
+  construct: use only the first 10 rows of the real sample; the default 10-bar warm-up skips every row
+  coverage: skipped_rows=10 effective_coverage=0.0
+L1 fault 11/12 ACTIVE_DEAD_VALUE_RUN: CONTINUE target=WARNING expected=WARNING failed=[]
+  construct: all rows: set OHLC=100, volume=1000, quote_volume=100000, is_trading=true; constant active prices create a dead-value run
+L1 fault 12/12 ROLLING_MAD_SPIKE: CONTINUE target=WARNING expected=WARNING failed=[]
+  construct: sorted row 100: double close, expand high/low to keep the OHLC range valid, and reset quote_volume to its midpoint; verify this timestamp appears in spike_rows
+  injected spike timestamp matched details.spike_rows: True rows=[{'symbol': 'BTCUSDT', 'bar_close_time': datetime.datetime(2024, 1, 5, 4, 59, 59, 999000, tzinfo=zoneinfo.ZoneInfo(key='UTC')), 'return': 1.0057365419377935, 'rolling_median': 0.0016076620861774638, 'rolling_mad': 0.004654750551410109}]
